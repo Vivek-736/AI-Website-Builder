@@ -6,8 +6,8 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "My Next.js App",
-  description: "A beautifully themed Next.js application",
+  title: "Lovella",
+  description: "A website building tool for everyone",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased bg-[#191b1e] text-white`}>
           <Provider>
             {children}
           </Provider>

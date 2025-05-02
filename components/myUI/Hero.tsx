@@ -91,7 +91,7 @@ const Hero = () => {
         </div>
         
         <div className='mt-8 text-gray-400 hidden md:flex flex-wrap gap-2 justify-center'>
-          {['Create a weather app with React', 'Build a Twitter clone using Next JS', 'Design a portfolio site with React'].map((prompt, index) => (
+          {['Create a weather app', 'Build a Twitter clone', 'Design a portfolio'].map((prompt, index) => (
             <span
               onClick={() => onGenerate(prompt)}
               key={index}

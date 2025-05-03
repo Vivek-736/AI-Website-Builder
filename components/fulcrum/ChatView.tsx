@@ -91,7 +91,7 @@ const ChatView = () => {
   };
 
   return (
-    <div className="flex h-[calc(74vh-20px)] flex-col relative">
+    <div className="flex h-[80vh] flex-col relative">
       <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
         {Array.isArray(input) &&
           input.map((message: any, index: number) => (

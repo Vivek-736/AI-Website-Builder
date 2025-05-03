@@ -9,7 +9,7 @@ const Header = () => {
     const pathname = usePathname();
 
     return (
-        <div className='p-6 flex justify-between items-center'>
+        <div className={`${pathname === '/' ? 'p-6' : 'py-2 px-8'} flex justify-between items-center`}>
             <div className='flex gap-x-2'>
                 <Image src={"/logo.png"} alt='logo' width={40} height={40} />
                 {pathname === '/' && (

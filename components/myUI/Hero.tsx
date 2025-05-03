@@ -8,7 +8,7 @@ import Typed from "typed.js";
 import AuthDialog from "./AuthDialog";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const Hero = () => {
   const typedRef = useRef(null);
@@ -30,11 +30,11 @@ const Hero = () => {
 
   const CreateWorkspace = useMutation(api.workspace.CreateWorkspace);
   const router = useRouter();
-
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const { input, setInput } = useContext(InputContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
+  const pathname = usePathname();
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -47,9 +47,21 @@ const Hero = () => {
     adjustTextareaHeight();
   }, [inputValue]);
 
+  const checkRouteExists = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      console.log(`Route check for ${url}:`, { status: response.status });
+      return response.ok;
+    } catch (error) {
+      console.error(`Error checking route ${url}:`, error);
+      return false;
+    }
+  };
+
   const onGenerate = useCallback(
     async (i: string) => {
       console.log("onGenerate called with input:", i);
+      console.log("Router state:", { pathname });
 
       if (!userDetail?.name) {
         console.log("No user name, opening auth dialog");
@@ -98,36 +110,35 @@ const Hero = () => {
         console.log("Attempting to navigate to:", workspaceUrl);
 
         // Prefetch the specific workspace route
+        console.log("Prefetching:", workspaceUrl);
         router.prefetch(workspaceUrl);
-        console.log("Prefetched:", workspaceUrl);
 
-        // Refresh router state to avoid hydration issues
-        router.refresh();
-        console.log("Router refreshed");
+        // Check if the route exists
+        const routeExists = await checkRouteExists(workspaceUrl);
+        if (!routeExists) {
+          throw new Error(`Workspace route ${workspaceUrl} does not exist`);
+        }
 
-        // Use router.replace instead of router.push to avoid history stack issues
-        await router.replace(workspaceUrl);
-        console.log("router.replace executed");
+        // Attempt navigation
+        console.log("Executing router.push");
+        router.push(workspaceUrl);
+        console.log("router.push executed");
 
-        // Fallback navigation if router.replace doesn't work
-        setTimeout(() => {
-          if (window.location.pathname !== workspaceUrl) {
-            console.log("router.replace failed, using window.location.assign");
-            window.location.assign(workspaceUrl);
-          }
-        }, 1000);
-      } catch (error) {
+        // Immediate fallback navigation
+        console.log("Executing window.location.assign");
+        window.location.assign(workspaceUrl);
+      } catch (error: any) {
         console.error("Error in onGenerate:", error);
-        setErrorMessage("Failed to create workspace. Please try again.");
+        setErrorMessage(error.message || "Failed to create workspace. Please try again.");
       } finally {
-        // Enforce minimum loading duration to prevent flashing
+        // Enforce minimum loading duration
         setTimeout(() => {
           console.log("Setting isLoading to false");
           setIsLoading(false);
-        }, 1500); // 1.5 seconds minimum loading
+        }, 2000); // 2 seconds minimum loading
       }
     },
-    [userDetail, setInput, CreateWorkspace, router]
+    [userDetail, setInput, CreateWorkspace, router, pathname]
   );
 
   useEffect(() => {
@@ -169,12 +180,6 @@ const Hero = () => {
     };
   }, []);
 
-  // Prefetch workspace route template
-  useEffect(() => {
-    router.prefetch("/workspace/[id]");
-    console.log("Prefetched /workspace/[id]");
-  }, [router]);
-
   return (
     <div className="flex flex-col items-center justify-center px-4 text-center">
       <div className="max-w-4xl mx-auto">
@@ -190,7 +195,10 @@ const Hero = () => {
           <p className="mb-4 text-red-500 text-sm">{errorMessage}</p>
         )}
 
-        <div className="relative w-full max-w-2xl mx-auto bg-gray-800 border-2 border-gray-700 rounded-xl focus-within:ring-4 focus-within:ring-pink-500 focus-within:border-transparent transition-all duration-300 hover:border-gray-600">
+        <div
+          className="relative w-full max-w-2xl mx-auto bg-gray-800 border-2 border-gray-700 rounded-xl focus-within:ring-4 focus-within:ring-pink-500 focus-within:border-transparent transition-all duration-300 hover:border-gray-600"
+          style={{ transition: "all 0.3s ease" }}
+        >
           <div className="grid grid-cols-[1fr_auto] items-start">
             <textarea
               ref={textareaRef}
@@ -199,6 +207,7 @@ const Hero = () => {
               className="w-full px-6 py-5 text-lg text-white bg-transparent border-none rounded-xl focus:outline-none focus:ring-0 placeholder-gray-500 resize-none overflow-hidden"
               placeholder=" "
               rows={1}
+              disabled={isLoading}
             />
             <button
               onClick={() => onGenerate(inputValue)}
@@ -251,6 +260,7 @@ const Hero = () => {
               onClick={() => onGenerate(prompt)}
               key={index}
               className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-600 hover:transition-all bg-gray-800 border border-gray-700 rounded-full text-gray-300 transition-all"
+              style={{ pointerEvents: isLoading ? "none" : "auto" }}
             >
               {prompt}
             </span>

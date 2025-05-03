@@ -1,8 +1,6 @@
 # AI Website Builder
 AI Website Builder is a cutting-edge platform that revolutionizes the way you create websites. With its intuitive design and advanced AI capabilities, building a website has never been easier. 
 
-## Why Choose AI Website Builder?
-
 ### Key Features
 - **AI-Powered Website Creation**: Harness the power of AI to generate stunning websites in minutes.
 - **Instant Updates**: Changes are reflected instantly, keeping everyone aligned.

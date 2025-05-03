@@ -4,9 +4,11 @@ import React from 'react'
 
 const Workspace = () => {
     return (
-        <div className='p-10'>
+        <div className='p-8'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-10'>
-                <ChatView />
+                <div>
+                    <ChatView />
+                </div>
                 <div className='col-span-2'>
                     <CodeView />
                 </div>

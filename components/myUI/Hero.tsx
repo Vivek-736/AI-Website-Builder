@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { InputContext } from "@/context/InputContext";
 import { UserDetailContext } from "@/context/UserDetailContext";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -48,38 +47,54 @@ const Hero = () => {
   }, [inputValue]);
 
   const onGenerate = async (i: string) => {
+    console.log("onGenerate called with input:", i);
+
     if (!userDetail?.name) {
+      console.log("No user name, opening auth dialog");
       setOpenDialog(true);
+      return;
+    }
+
+    if (!userDetail?._id) {
+      console.error("User ID is undefined");
+      return;
+    }
+
+    if (!i.trim()) {
+      console.error("Input value is empty");
       return;
     }
 
     try {
       setIsLoading(true);
+      console.log("Setting isLoading to true");
+
       const msg = {
         role: "user",
         content: i,
       };
 
+      console.log("Setting input context:", msg);
       setInput(msg);
 
-      if (!userDetail?._id) {
-        console.error("User ID is undefined");
-        return;
-      }
-
+      console.log("Calling CreateWorkspace with user ID:", userDetail._id);
       const id = await CreateWorkspace({
         user: userDetail._id,
         messages: [msg],
       });
 
-      if (id) {
-        router.push(`/workspace/${id}`);
-      } else {
-        console.error("Failed to create workspace");
+      console.log("Workspace ID received:", id);
+
+      if (!id) {
+        throw new Error("Workspace creation failed: No ID returned");
       }
+
+      console.log("Navigating to workspace:", `/workspace/${id}`);
+      router.push(`/workspace/${id}`);
     } catch (error) {
-      console.error("Error creating workspace:", error);
+      console.error("Error in onGenerate:", error);
     } finally {
+      console.log("Setting isLoading to false");
       setIsLoading(false);
     }
   };
@@ -123,6 +138,11 @@ const Hero = () => {
     };
   }, []);
 
+  // Prefetch workspace route to improve navigation
+  useEffect(() => {
+    router.prefetch("/workspace/[id]");
+  }, [router]);
+
   return (
     <div className="flex flex-col items-center justify-center px-4 text-center">
       <div className="max-w-4xl mx-auto">
@@ -147,7 +167,7 @@ const Hero = () => {
             <button
               onClick={() => onGenerate(inputValue)}
               className="px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-              disabled={!inputValue || isLoading}
+              disabled={!inputValue.trim() || isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">

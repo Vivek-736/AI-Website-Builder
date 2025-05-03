@@ -3,7 +3,7 @@
 "use client";
 import { InputContext } from "@/context/InputContext";
 import { UserDetailContext } from "@/context/UserDetailContext";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Typed from "typed.js";
 import AuthDialog from "./AuthDialog";
 import { useMutation } from "convex/react";
@@ -14,6 +14,7 @@ const Hero = () => {
   const typedRef = useRef(null);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [floatingStyles, setFloatingStyles] = useState<
     {
       width: string;
@@ -31,7 +32,7 @@ const Hero = () => {
   const router = useRouter();
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
+  // @ts-ignore
   const { input, setInput } = useContext(InputContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
 
@@ -46,58 +47,88 @@ const Hero = () => {
     adjustTextareaHeight();
   }, [inputValue]);
 
-  const onGenerate = async (i: string) => {
-    console.log("onGenerate called with input:", i);
+  const onGenerate = useCallback(
+    async (i: string) => {
+      console.log("onGenerate called with input:", i);
 
-    if (!userDetail?.name) {
-      console.log("No user name, opening auth dialog");
-      setOpenDialog(true);
-      return;
-    }
-
-    if (!userDetail?._id) {
-      console.error("User ID is undefined");
-      return;
-    }
-
-    if (!i.trim()) {
-      console.error("Input value is empty");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log("Setting isLoading to true");
-
-      const msg = {
-        role: "user",
-        content: i,
-      };
-
-      console.log("Setting input context:", msg);
-      setInput(msg);
-
-      console.log("Calling CreateWorkspace with user ID:", userDetail._id);
-      const id = await CreateWorkspace({
-        user: userDetail._id,
-        messages: [msg],
-      });
-
-      console.log("Workspace ID received:", id);
-
-      if (!id) {
-        throw new Error("Workspace creation failed: No ID returned");
+      if (!userDetail?.name) {
+        console.log("No user name, opening auth dialog");
+        setOpenDialog(true);
+        return;
       }
 
-      console.log("Navigating to workspace:", `/workspace/${id}`);
-      router.push(`/workspace/${id}`);
-    } catch (error) {
-      console.error("Error in onGenerate:", error);
-    } finally {
-      console.log("Setting isLoading to false");
-      setIsLoading(false);
-    }
-  };
+      if (!userDetail?._id) {
+        console.error("User ID is undefined");
+        setErrorMessage("User authentication failed. Please log in again.");
+        return;
+      }
+
+      if (!i.trim()) {
+        console.error("Input value is empty");
+        setErrorMessage("Please enter a valid input.");
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        console.log("Setting isLoading to true");
+
+        const msg = {
+          role: "user",
+          content: i,
+        };
+
+        console.log("Setting input context:", msg);
+        setInput(msg);
+
+        console.log("Calling CreateWorkspace with user ID:", userDetail._id);
+        const id = await CreateWorkspace({
+          user: userDetail._id,
+          messages: [msg],
+        });
+
+        console.log("Workspace ID received:", id);
+
+        if (!id) {
+          throw new Error("Workspace creation failed: No ID returned");
+        }
+
+        const workspaceUrl = `/workspace/${id}`;
+        console.log("Attempting to navigate to:", workspaceUrl);
+
+        // Prefetch the specific workspace route
+        router.prefetch(workspaceUrl);
+        console.log("Prefetched:", workspaceUrl);
+
+        // Refresh router state to avoid hydration issues
+        router.refresh();
+        console.log("Router refreshed");
+
+        // Use router.replace instead of router.push to avoid history stack issues
+        await router.replace(workspaceUrl);
+        console.log("router.replace executed");
+
+        // Fallback navigation if router.replace doesn't work
+        setTimeout(() => {
+          if (window.location.pathname !== workspaceUrl) {
+            console.log("router.replace failed, using window.location.assign");
+            window.location.assign(workspaceUrl);
+          }
+        }, 1000);
+      } catch (error) {
+        console.error("Error in onGenerate:", error);
+        setErrorMessage("Failed to create workspace. Please try again.");
+      } finally {
+        // Enforce minimum loading duration to prevent flashing
+        setTimeout(() => {
+          console.log("Setting isLoading to false");
+          setIsLoading(false);
+        }, 1500); // 1.5 seconds minimum loading
+      }
+    },
+    [userDetail, setInput, CreateWorkspace, router]
+  );
 
   useEffect(() => {
     const styles = Array.from({ length: 10 }).map(() => ({
@@ -138,9 +169,10 @@ const Hero = () => {
     };
   }, []);
 
-  // Prefetch workspace route to improve navigation
+  // Prefetch workspace route template
   useEffect(() => {
     router.prefetch("/workspace/[id]");
+    console.log("Prefetched /workspace/[id]");
   }, [router]);
 
   return (
@@ -153,6 +185,10 @@ const Hero = () => {
         <p className="mb-10 text-xl font-medium text-gray-300 md:text-2xl">
           Idea to app in seconds, with your personal full stack engineer
         </p>
+
+        {errorMessage && (
+          <p className="mb-4 text-red-500 text-sm">{errorMessage}</p>
+        )}
 
         <div className="relative w-full max-w-2xl mx-auto bg-gray-800 border-2 border-gray-700 rounded-xl focus-within:ring-4 focus-within:ring-pink-500 focus-within:border-transparent transition-all duration-300 hover:border-gray-600">
           <div className="grid grid-cols-[1fr_auto] items-start">
@@ -168,6 +204,7 @@ const Hero = () => {
               onClick={() => onGenerate(inputValue)}
               className="px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               disabled={!inputValue.trim() || isLoading}
+              style={{ transition: "opacity 0.3s ease, background-color 0.3s ease" }}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">

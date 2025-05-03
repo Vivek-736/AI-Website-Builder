@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const CreateWorkspace = mutation({
     args: {
@@ -47,6 +47,18 @@ export const UpdateFiles = mutation({
         const result = await ctx.db.patch(args.workspaceId, {
             fileData: args.files
         });
+        return result;
+    }
+})
+
+export const GetAllWorkspaces = query({
+    args: {
+        userId: v.id("users")
+    },
+    handler: async (ctx, args) => {
+        const result = await ctx.db.query("workspace").filter((q) => {
+            return q.eq(q.field("user"), args.userId);
+        }).collect();
         return result;
     }
 })

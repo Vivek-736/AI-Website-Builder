@@ -14,7 +14,8 @@ import Prompt from "@/data/Prompt";
 import { useConvex, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Menu } from "lucide-react";
+import { useSidebar } from "../ui/sidebar";
 
 const CodeView = () => {
   const { id } = useParams();
@@ -27,6 +28,7 @@ const CodeView = () => {
   const UpdateFiles = useMutation(api.workspace.UpdateFiles);
   const convex = useConvex();
   const [loading, setLoading] = useState(false);
+  const { toggleSidebar } = useSidebar();
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -79,7 +81,13 @@ const CodeView = () => {
 
   return (
     <div className="relative">
-      <div className="bg-[#181818] border border-gray-400 w-full flex flex-row-reverse rounded-lg p-2">
+      <div className="bg-[#181818] border border-gray-400 w-full flex justify-between items-center rounded-lg p-2">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-full bg-black text-gray-400 hover:text-blue-400 hover:bg-blue-500/25 transition-colors"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <div className="relative flex items-center bg-black rounded-full p-1 w-48 h-10">
           <div className="absolute inset-0 flex items-center">
             <div
@@ -90,7 +98,6 @@ const CodeView = () => {
               }`}
             />
           </div>
-
           <button
             onClick={() => setActive("code")}
             className={`flex-1 z-10 text-sm transition-colors ${
@@ -125,27 +132,22 @@ const CodeView = () => {
         theme="dark"
       >
         <SandpackLayout>
-          {active == "code" ? (
+          {active === "code" ? (
             <>
-              <SandpackFileExplorer style={{ height: "71vh" }} />
-              <SandpackCodeEditor style={{ height: "71vh" }} />
+              <SandpackFileExplorer style={{ height: "76vh" }} />
+              <SandpackCodeEditor style={{ height: "76vh" }} />
             </>
           ) : (
-            <>
-              <SandpackPreview
-                showNavigator={true}
-                style={{ height: "71vh" }}
-              />
-            </>
+            <SandpackPreview showNavigator={true} style={{ height: "76vh" }} />
           )}
         </SandpackLayout>
       </SandpackProvider>
-      {loading && <div className="p-10 bg-gray-900 opacity-75 absolute top-0 rounded-lg w-full h-full flex items-center justify-center">
-        <LoaderCircle className="h-10 w-10 animate-spin text-white" />
-        <h2>
-          Generating code & spinning up preview...
-        </h2>
-      </div>}
+      {loading && (
+        <div className="p-10 bg-gray-900 opacity-75 absolute top-0 rounded-lg w-full h-full flex items-center justify-center">
+          <LoaderCircle className="h-10 w-10 animate-spin text-white" />
+          <h2>Generating code & spinning up preview...</h2>
+        </div>
+      )}
     </div>
   );
 };

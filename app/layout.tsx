@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "A website building tool for everyone",
 };
 
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: Readonly<{

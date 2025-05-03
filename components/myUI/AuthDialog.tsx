@@ -23,8 +23,6 @@ interface AuthDialogProps {
 }
 
 const AuthDialog = ({ openDialog, closeDialog }: AuthDialogProps) => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   const {userDetail, setUserDetail} = useContext(UserDetailContext);
   const CreateUser = useMutation(api.users.CreateUser);
 

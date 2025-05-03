@@ -13,4 +13,14 @@ export const CreateWorkspace = mutation({
         });
         return workspaceId;
     }
-})
+});
+
+export const GetWorkspace = mutation({
+    args: {
+        workspaceId: v.id("workspace")
+    },
+    handler: async (ctx, args) => {
+        const result = await ctx.db.get(args.workspaceId);
+        return result;
+    }
+});

@@ -1,15 +1,22 @@
 import Image from 'next/image'
-import React from 'react'
+import React, { useContext } from 'react'
 import { Button } from '../ui/button'
+import { UserDetailContext } from '@/context/UserDetailContext'
+import { usePathname } from 'next/navigation'
 
 const Header = () => {
+    const { userDetail } = useContext(UserDetailContext);
+    const pathname = usePathname();
+
     return (
         <div className='p-6 flex justify-between items-center'>
             <div className='flex gap-x-2'>
                 <Image src={"/logo.png"} alt='logo' width={40} height={40} />
-                <p className='font-extrabold text-3xl mt-0.5'>Lovella</p>
+                {pathname === '/' && (
+                    <p className='font-extrabold text-3xl mt-0.5'>Lovella</p>
+                )}
             </div>
-            <div className='flex gap-x-4'>
+            {!userDetail?.name && <div className='flex gap-x-4'>
                 <Button variant='default' className='cursor-pointer'>
                     Sign In
                 </Button>
@@ -28,7 +35,7 @@ const Header = () => {
                 >
                     Get Started
                 </Button>
-            </div>
+            </div>}
         </div>
     )
 }

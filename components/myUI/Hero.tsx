@@ -65,93 +65,55 @@ const Hero = () => {
 
   const onGenerate = useCallback(
     async (i: string) => {
-      
       if (!userDetail?.name) {
-        console.log("No user name, opening auth dialog");
         setOpenDialog(true);
         return;
       }
-
+  
       if (!userDetail?._id) {
-        console.error("User ID is undefined");
         setErrorMessage("User authentication failed. Please log in again.");
         return;
       }
-
+  
       if (!i.trim()) {
-        console.error("Input value is empty");
         setErrorMessage("Please enter a valid input.");
         return;
       }
-
+  
       try {
         setIsLoading(true);
         setErrorMessage(null);
-        console.log("Setting isLoading to true");
-
-        const msg = {
-          role: "user",
-          content: i,
-        };
-
-        console.log("Setting input context:", msg);
+  
+        const msg = { role: "user", content: i };
         setInput(msg);
-
-        console.log("Calling CreateWorkspace with user ID:", userDetail._id);
+  
         const id = await CreateWorkspace({
           user: userDetail._id,
           messages: [msg],
         });
-
-        console.log("Workspace ID received:", id);
-
-        if (!id) {
-          throw new Error("Workspace creation failed: No ID returned");
-        }
-
+  
+        if (!id) throw new Error("Workspace creation failed");
+  
         const workspaceUrl = `/workspace/${id}`;
-        console.log("Attempting to navigate to:", workspaceUrl);
-
-        // Prefetch the specific workspace route
-        console.log("Prefetching:", workspaceUrl);
-        router.prefetch(workspaceUrl);
-
-        // Check if the route exists
-        const routeExists = await checkRouteExists(workspaceUrl);
-        if (!routeExists) {
-          console.error(`Workspace route ${workspaceUrl} does not exist`);
-          setErrorMessage(
-            `Workspace route ${workspaceUrl} is not available. Please check your route configuration.`
-          );
-          // Fallback to home page
-          console.log("Falling back to home page");
-          window.location.assign("/");
-          return;
-        }
-
-        // Attempt navigation with retry
-        for (let attempt = 1; attempt <= 2; attempt++) {
-          console.log(`Navigation attempt ${attempt}: router.push(${workspaceUrl})`);
-          router.push(workspaceUrl);
-          console.log(`router.push attempt ${attempt} executed`);
-
-          // Immediate fallback navigation
-          console.log(`Navigation attempt ${attempt}: window.location.assign(${workspaceUrl})`);
-          window.location.assign(workspaceUrl);
-          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait briefly before retry
-        }
+        
+        // Attempt client-side navigation first
+        router.push(workspaceUrl);
+  
+        // Fallback to hard navigation if not completed in 3 seconds
+        const timeout = setTimeout(() => {
+          window.location.href = workspaceUrl;
+        }, 3000);
+  
+        // Cleanup timeout if navigation succeeds
+        const cleanup = () => clearTimeout(timeout);
+        window.addEventListener('beforeunload', cleanup);
+  
       } catch (error: any) {
-        console.error("Error in onGenerate:", error);
-        setErrorMessage(error.message || "Failed to create workspace. Please try again.");
-      } finally {
-        // Enforce minimum loading duration
-        setTimeout(() => {
-          console.log("Setting isLoading to false");
-          setIsLoading(false);
-        }, 2500); // 2.5 seconds minimum loading
+        setErrorMessage(error.message || "Failed to create workspace.");
+        setIsLoading(false);
       }
     },
-    [userDetail, setInput, CreateWorkspace, router]
+    [userDetail, router, setInput, CreateWorkspace]
   );
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import ChatView from '@/components/fulcrum/ChatView'
 import CodeView from '@/components/fulcrum/CodeView'
-import React from 'react'
+import { GetStaticPaths, GetStaticProps } from 'next'
 
 const Workspace = () => {
     return (
@@ -15,6 +15,20 @@ const Workspace = () => {
             </div>
         </div>
     )
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+    return {
+        paths: [],
+        fallback: 'blocking'
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getStaticProps: GetStaticProps = async (context) => {
+    return {
+        props: {}
+    }
 }
 
 export default Workspace

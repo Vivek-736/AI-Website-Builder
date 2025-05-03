@@ -8,7 +8,7 @@ import Typed from "typed.js";
 import AuthDialog from "./AuthDialog";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const Hero = () => {
   const typedRef = useRef(null);
@@ -30,11 +30,11 @@ const Hero = () => {
 
   const CreateWorkspace = useMutation(api.workspace.CreateWorkspace);
   const router = useRouter();
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  // @ts-expect-error
   const { input, setInput } = useContext(InputContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
-  const pathname = usePathname();
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -47,22 +47,25 @@ const Hero = () => {
     adjustTextareaHeight();
   }, [inputValue]);
 
-  const checkRouteExists = async (url: string): Promise<boolean> => {
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      console.log(`Route check for ${url}:`, { status: response.status });
-      return response.ok;
-    } catch (error) {
-      console.error(`Error checking route ${url}:`, error);
-      return false;
+  const checkRouteExists = async (url: string, retries = 2): Promise<boolean> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(url, { method: "HEAD" });
+        console.log(`Route check for ${url} (attempt ${attempt}):`, {
+          status: response.status,
+          ok: response.ok,
+        });
+        if (response.ok) return true;
+      } catch (error) {
+        console.error(`Error checking route ${url} (attempt ${attempt}):`, error);
+      }
     }
+    return false;
   };
 
   const onGenerate = useCallback(
     async (i: string) => {
-      console.log("onGenerate called with input:", i);
-      console.log("Router state:", { pathname });
-
+      
       if (!userDetail?.name) {
         console.log("No user name, opening auth dialog");
         setOpenDialog(true);
@@ -116,17 +119,27 @@ const Hero = () => {
         // Check if the route exists
         const routeExists = await checkRouteExists(workspaceUrl);
         if (!routeExists) {
-          throw new Error(`Workspace route ${workspaceUrl} does not exist`);
+          console.error(`Workspace route ${workspaceUrl} does not exist`);
+          setErrorMessage(
+            `Workspace route ${workspaceUrl} is not available. Please check your route configuration.`
+          );
+          // Fallback to home page
+          console.log("Falling back to home page");
+          window.location.assign("/");
+          return;
         }
 
-        // Attempt navigation
-        console.log("Executing router.push");
-        router.push(workspaceUrl);
-        console.log("router.push executed");
+        // Attempt navigation with retry
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          console.log(`Navigation attempt ${attempt}: router.push(${workspaceUrl})`);
+          router.push(workspaceUrl);
+          console.log(`router.push attempt ${attempt} executed`);
 
-        // Immediate fallback navigation
-        console.log("Executing window.location.assign");
-        window.location.assign(workspaceUrl);
+          // Immediate fallback navigation
+          console.log(`Navigation attempt ${attempt}: window.location.assign(${workspaceUrl})`);
+          window.location.assign(workspaceUrl);
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait briefly before retry
+        }
       } catch (error: any) {
         console.error("Error in onGenerate:", error);
         setErrorMessage(error.message || "Failed to create workspace. Please try again.");
@@ -135,10 +148,10 @@ const Hero = () => {
         setTimeout(() => {
           console.log("Setting isLoading to false");
           setIsLoading(false);
-        }, 2000); // 2 seconds minimum loading
+        }, 2500); // 2.5 seconds minimum loading
       }
     },
-    [userDetail, setInput, CreateWorkspace, router, pathname]
+    [userDetail, setInput, CreateWorkspace, router]
   );
 
   useEffect(() => {
@@ -182,6 +195,28 @@ const Hero = () => {
 
   return (
     <div className="flex flex-col items-center justify-center px-4 text-center">
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <svg
+            className="animate-spin h-10 w-10 text-pink-500"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+            />
+          </svg>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto">
         <h1 className="mb-6 text-3xl font-extrabold text-white md:text-5xl lg:text-7xl mt-28 md:mt-16">
           Build something <span className="text-pink-400">💖 Cherishable</span>

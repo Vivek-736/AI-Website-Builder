@@ -1,4 +1,5 @@
 "use client";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -118,7 +119,7 @@ const ChatView = () => {
         {loading && (
           <div className="p-3 rounded-lg mb-2 bg-gray-700 flex gap-2 items-start">
             <Loader2 className="animate-spin" />
-            <h2>Generating response.....</h2>
+            <h2>Processing your request.....</h2>
           </div>
         )}
       </div>

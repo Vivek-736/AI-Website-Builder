@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -8,14 +8,78 @@ import {
   SandpackFileExplorer,
 } from "@codesandbox/sandpack-react";
 import Needs from "@/data/Needs";
+import axios from "axios";
+import { InputContext } from "@/context/InputContext";
+import Prompt from "@/data/Prompt";
+import { useConvex, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useParams } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 
 const CodeView = () => {
+  const { id } = useParams();
   const [active, setActive] = useState<"code" | "preview">("code");
-  const [files, setFiles] = useState(Needs?.DEFAULT_FILE)
+  const [files, setFiles] = useState(Needs?.DEFAULT_FILE);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { input, setInput } = useContext(InputContext);
+  const UpdateFiles = useMutation(api.workspace.UpdateFiles);
+  const convex = useConvex();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    id && GetFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const GetFiles = async () => {
+    setLoading(true);
+    const result = await convex.mutation(api.workspace.GetWorkspace, {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      workspaceId: id as string,
+    });
+    const mergedFiles = { ...Needs.DEFAULT_FILE, ...result?.fileData };
+    setFiles(mergedFiles);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (input?.length > 0) {
+      const role = input[input?.length - 1].role;
+      if (role === "user") {
+        GenerateAiCode();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input]);
+
+  const GenerateAiCode = async () => {
+    setLoading(true);
+    const PROMPT =
+      input?.[input.length - 1]?.content + " " + Prompt.CODE_GEN_PROMPT;
+    const result = await axios.post("/api/gen-ai", {
+      prompt: PROMPT,
+    });
+    console.log(result.data);
+    const aiRes = result.data;
+
+    const mergedFiles = { ...Needs.DEFAULT_FILE, ...aiRes?.files };
+    setFiles(mergedFiles);
+    await UpdateFiles({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      workspaceId: id,
+      files: aiRes?.files,
+    });
+    setLoading(false);
+  };
 
   return (
-    <div>
-      <div className="bg-[#181818] w-full flex flex-row-reverse p-2">
+    <div className="relative">
+      <div className="bg-[#181818] border border-gray-400 w-full flex flex-row-reverse rounded-lg p-2">
         <div className="relative flex items-center bg-black rounded-full p-1 w-48 h-10">
           <div className="absolute inset-0 flex items-center">
             <div
@@ -49,21 +113,39 @@ const CodeView = () => {
           </button>
         </div>
       </div>
-      <SandpackProvider files={files} options={{externalResources: ['https://cdn.tailwindcss.com']}} customSetup={{
-        dependencies: {
-            ...Needs.DEPENDANCY
-        }
-      }} template="react" theme="dark">
+      <SandpackProvider
+        files={files}
+        options={{ externalResources: ["https://cdn.tailwindcss.com"] }}
+        customSetup={{
+          dependencies: {
+            ...Needs.DEPENDANCY,
+          },
+        }}
+        template="react"
+        theme="dark"
+      >
         <SandpackLayout>
-          {active == "code" ?<>
-            <SandpackFileExplorer style={{ height: "71vh" }} />
-            <SandpackCodeEditor style={{ height: "71vh" }} />
-          </>:
-          <>
-            <SandpackPreview showNavigator={true} style={{ height: "71vh" }} />
-          </>}
+          {active == "code" ? (
+            <>
+              <SandpackFileExplorer style={{ height: "71vh" }} />
+              <SandpackCodeEditor style={{ height: "71vh" }} />
+            </>
+          ) : (
+            <>
+              <SandpackPreview
+                showNavigator={true}
+                style={{ height: "71vh" }}
+              />
+            </>
+          )}
         </SandpackLayout>
       </SandpackProvider>
+      {loading && <div className="p-10 bg-gray-900 opacity-75 absolute top-0 rounded-lg w-full h-full flex items-center justify-center">
+        <LoaderCircle className="h-10 w-10 animate-spin text-white" />
+        <h2>
+          Generating code & spinning up preview...
+        </h2>
+      </div>}
     </div>
   );
 };

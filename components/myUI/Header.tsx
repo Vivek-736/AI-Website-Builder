@@ -10,7 +10,7 @@ const Header = () => {
                 <p className='font-extrabold text-3xl mt-0.5'>Lovella</p>
             </div>
             <div className='flex gap-x-4'>
-                <Button variant='ghost' className='cursor-pointer'>
+                <Button variant='default' className='cursor-pointer'>
                     Sign In
                 </Button>
                 <Button

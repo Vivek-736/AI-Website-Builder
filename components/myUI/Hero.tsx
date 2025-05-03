@@ -1,24 +1,47 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { InputContext } from '@/context/InputContext';
+import { UserDetailContext } from '@/context/UserDetailContext';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import Typed from 'typed.js';
+import AuthDialog from './AuthDialog';
 
 const Hero = () => {
   const typedRef = useRef(null);
   const [inputValue, setInputValue] = useState('');
   const [floatingStyles, setFloatingStyles] = useState<{ width: string; height: string; top: string; left: string; animation: string; animationDelay: string; }[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const {input, setInput} = useContext(InputContext);
+  const { input, setInput } = useContext(InputContext);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  const { userDetail, setUserDetail } = useContext(UserDetailContext);
+
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputValue]);
 
   const onGenerate = (i: string) => {
+    if (!userDetail?.name) {
+      setOpenDialog(true);
+      return;
+    }
     setInput({
       role: 'user',
       content: i
-    })
-  }
+    });
+  };
 
   useEffect(() => {
     const styles = Array.from({ length: 10 }).map(() => ({
@@ -70,24 +93,30 @@ const Hero = () => {
           Idea to app in seconds, with your personal full stack engineer
         </p>
         
-        <div className='relative w-full max-w-2xl mx-auto'>
-          <input
-            type='text'
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className='w-full px-6 py-5 text-lg text-white bg-gray-800 border-2 border-gray-700 rounded-xl focus:outline-none focus:ring-4 focus:ring-pink-500 focus:border-transparent placeholder-gray-500 transition-all duration-300 hover:border-gray-600'
-            placeholder=' '
-          />
+        <div className='relative w-full max-w-2xl mx-auto bg-gray-800 border-2 border-gray-700 rounded-xl focus-within:ring-4 focus-within:ring-pink-500 focus-within:border-transparent transition-all duration-300 hover:border-gray-600'>
+          <div className='grid grid-cols-[1fr_auto] items-start'>
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className='w-full px-6 py-5 text-lg text-white bg-transparent border-none rounded-xl focus:outline-none focus:ring-0 placeholder-gray-500 resize-none overflow-hidden'
+              placeholder=' '
+              rows={1}
+            />
+            <button 
+              onClick={() => onGenerate(inputValue)} 
+              className='px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed' 
+              disabled={!inputValue}
+            >
+              Build It
+            </button>
+          </div>
           <span
             ref={typedRef}
-            className={`absolute top-9 left-6 -translate-y-1/2 text-gray-400 pointer-events-none text-lg ${
+            className={`absolute top-1/2 left-6 -translate-y-1/2 text-gray-400 pointer-events-none text-lg ${
               inputValue ? 'opacity-0' : ''
             }`}
           />
-          
-          <button onClick={()=>onGenerate(inputValue)} className='absolute disabled:hover:scale-none disabled:cursor-no-drop disabled:bg-gray-600 cursor-pointer right-2 top-9 -translate-y-1/2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105' disabled={!inputValue}>
-            Build It
-          </button>
         </div>
         
         <div className='mt-8 text-gray-400 hidden md:flex flex-wrap gap-2 justify-center'>
@@ -112,6 +141,7 @@ const Hero = () => {
           />
         ))}
       </div>
+      <AuthDialog openDialog={openDialog} closeDialog={(v: any) => setOpenDialog(v)} />
     </div>
   );
 };

@@ -12,6 +12,9 @@ import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { UserDetailContext } from "@/context/UserDetailContext";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { v4 as uuidv4 } from 'uuid';
 
 interface AuthDialogProps {
     openDialog: boolean;
@@ -23,6 +26,7 @@ const AuthDialog = ({ openDialog, closeDialog }: AuthDialogProps) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const {userDetail, setUserDetail} = useContext(UserDetailContext);
+  const CreateUser = useMutation(api.users.CreateUser);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -35,6 +39,18 @@ const AuthDialog = ({ openDialog, closeDialog }: AuthDialogProps) => {
         }
       );
       // console.log(userInfo);
+      const user = userInfo.data;
+      await CreateUser({
+        name: user?.name,
+        email: user?.email,
+        picture: user?.picture,
+        uid: uuidv4()
+      })
+
+      if(typeof window !== 'undefined') {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
       setUserDetail(userInfo?.data);
       closeDialog(false);
     },

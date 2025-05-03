@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
 import { InputContext } from "@/context/InputContext";
 import { UserDetailContext } from "@/context/UserDetailContext";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -13,6 +14,7 @@ import { useRouter } from "next/navigation";
 const Hero = () => {
   const typedRef = useRef(null);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [floatingStyles, setFloatingStyles] = useState<
     {
       width: string;
@@ -27,7 +29,6 @@ const Hero = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const CreateWorkspace = useMutation(api.workspace.CreateWorkspace);
-
   const router = useRouter();
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -52,24 +53,35 @@ const Hero = () => {
       return;
     }
 
-    const msg = {
-      role: "user",
-      content: i,
-    };
+    try {
+      setIsLoading(true);
+      const msg = {
+        role: "user",
+        content: i,
+      };
 
-    setInput(msg);
+      setInput(msg);
 
-    if (!userDetail?._id) {
-      console.error("User ID is undefined");
-      return;
+      if (!userDetail?._id) {
+        console.error("User ID is undefined");
+        return;
+      }
+
+      const id = await CreateWorkspace({
+        user: userDetail._id,
+        messages: [msg],
+      });
+
+      if (id) {
+        router.push(`/workspace/${id}`);
+      } else {
+        console.error("Failed to create workspace");
+      }
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    const workspaceId = await CreateWorkspace({
-      user: userDetail._id,
-      messages: [msg],
-    });
-    console.log("Workspace ID:", workspaceId);
-    router.push(`/workspace/${workspaceId}`);
   };
 
   useEffect(() => {
@@ -134,10 +146,34 @@ const Hero = () => {
             />
             <button
               onClick={() => onGenerate(inputValue)}
-              className="px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!inputValue}
+              className="px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+              disabled={!inputValue || isLoading}
             >
-              Build It
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+                    />
+                  </svg>
+                  Building...
+                </div>
+              ) : (
+                "Build It"
+              )}
             </button>
           </div>
           <span

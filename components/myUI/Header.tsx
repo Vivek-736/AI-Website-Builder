@@ -1,13 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Image from "next/image";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Button } from "../ui/button";
 import { UserDetailContext } from "@/context/UserDetailContext";
 import { usePathname } from "next/navigation";
 import { Database, Github } from "lucide-react";
+import AuthDialog from "./AuthDialog";
 
 const Header = () => {
   const { userDetail } = useContext(UserDetailContext);
   const pathname = usePathname();
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const onGenerate = () => {
+    if (!userDetail?.name) {
+      setOpenDialog(true);
+      return;
+    }
+  };
 
   return (
     <div
@@ -48,10 +58,15 @@ const Header = () => {
         )}
         {!userDetail?.name ? (
           <div className="flex gap-x-4">
-            <Button variant="default" className="cursor-pointer">
+            <Button
+              onClick={() => onGenerate()}
+              variant="default"
+              className="cursor-pointer"
+            >
               Sign In
             </Button>
             <Button
+              onClick={() => onGenerate()}
               style={{
                 background: "linear-gradient(90deg, #FF0080 0%, #FF8C00 100%)",
                 boxShadow: "0px 4px 20px rgba(255, 140, 0, 0.5)",
@@ -79,6 +94,10 @@ const Header = () => {
           </div>
         )}
       </div>
+      <AuthDialog
+        openDialog={openDialog}
+        closeDialog={(v: any) => setOpenDialog(v)}
+      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import ChatView from '@/components/fulcrum/ChatView'
 import CodeView from '@/components/fulcrum/CodeView'
+import React from 'react'
 
 const Workspace = () => {
     return (

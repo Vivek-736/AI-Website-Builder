@@ -1,5 +1,6 @@
 import { Id } from '@/convex/_generated/dataModel';
 import { createContext } from 'react';
+
 interface UserType {
   _id?: Id<"users">;
   name: string;

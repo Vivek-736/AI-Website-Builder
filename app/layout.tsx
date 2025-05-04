@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased bg-[#191b1e] text-white md:overflow-y-hidden`}>
+      <body className={`${inter.className} antialiased bg-[#191b1e] text-white`}>
         <ConvexClientProvider>
           <Provider>
             {children}

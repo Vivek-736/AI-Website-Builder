@@ -38,7 +38,6 @@ const Hero = () => {
   const { input, setInput } = useContext(InputContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
 
-  // Fetch workspaces
   const workspaces = useQuery(api.workspace.GetAllWorkspaces, userDetail?._id ? { userId: userDetail._id } : "skip");
 
   const adjustTextareaHeight = () => {
@@ -227,10 +226,9 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Workspace Cards Grid */}
       {workspaces && workspaces.length > 0 && (
         <div className="max-w-6xl mx-auto mt-16 px-4">
-          <h2 className="text-2xl font-bold text-white mb-6">Your Workspaces</h2>
+          <h2 className="md:text-4xl text2xl font-bold text-pink-400 mb-12">Your Workspaces</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {workspaces.map((workspace, index) => (
               <div

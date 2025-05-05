@@ -4,19 +4,28 @@ import React, { useContext, useState } from "react";
 import { Button } from "../ui/button";
 import { UserDetailContext } from "@/context/UserDetailContext";
 import { usePathname } from "next/navigation";
-import { Database, Github } from "lucide-react";
+import { Database, Github, Send } from "lucide-react";
 import AuthDialog from "./AuthDialog";
+import ActionDialog from "./ActionDialog";
 
 const Header = () => {
   const { userDetail } = useContext(UserDetailContext);
   const pathname = usePathname();
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
+  const [openActionDialog, setOpenActionDialog] = useState<{
+    type: "github" | "publish" | "supabase" | null;
+    open: boolean;
+  }>({ type: null, open: false });
 
   const onGenerate = () => {
     if (!userDetail?.name) {
-      setOpenDialog(true);
+      setOpenAuthDialog(true);
       return;
     }
+  };
+
+  const handleActionDialog = (type: "github" | "publish" | "supabase") => {
+    setOpenActionDialog({ type, open: true });
   };
 
   return (
@@ -36,20 +45,24 @@ const Header = () => {
           <>
             <Button
               variant="default"
-              className="cursor-pointer bg-green-600 hover:bg-green-700 text-white"
+              className="cursor-pointer md:flex hidden bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => handleActionDialog("publish")}
             >
+              <Send className="h-5 w-5 mr-2" />
               Publish
             </Button>
             <Button
               variant="outline"
-              className="cursor-pointer border-gray-300 bg-gray-800 hover:bg-gray-700 text-white"
+              className="cursor-pointer md:flex hidden border-gray-300 bg-gray-800 hover:bg-gray-700 text-white"
+              onClick={() => handleActionDialog("github")}
             >
               <Github className="h-5 w-5 mr-2" />
               GitHub
             </Button>
             <Button
               variant="outline"
-              className="cursor-pointer border-gray-300 bg-purple-600 hover:bg-purple-700 text-white"
+              className="cursor-pointer md:flex hidden border-gray-300 bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => handleActionDialog("supabase")}
             >
               <Database className="h-5 w-5 mr-2" />
               Supabase
@@ -95,9 +108,16 @@ const Header = () => {
         )}
       </div>
       <AuthDialog
-        openDialog={openDialog}
-        closeDialog={(v: any) => setOpenDialog(v)}
+        openDialog={openAuthDialog}
+        closeDialog={(v: any) => setOpenAuthDialog(v)}
       />
+      {openActionDialog.type && (
+        <ActionDialog
+          open={openActionDialog.open}
+          onOpenChange={(open) => setOpenActionDialog({ type: null, open })}
+          type={openActionDialog.type}
+        />
+      )}
     </div>
   );
 };

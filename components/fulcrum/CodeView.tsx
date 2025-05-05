@@ -127,14 +127,14 @@ const CodeView = () => {
         <SandpackLayout>
           {active == "code" ? (
             <>
-              <SandpackFileExplorer style={{ height: "75vh" }} />
-              <SandpackCodeEditor style={{ height: "75vh" }} />
+              <SandpackFileExplorer style={{ height: "76vh" }} />
+              <SandpackCodeEditor style={{ height: "76vh" }} />
             </>
           ) : (
             <>
               <SandpackPreview
                 showNavigator={true}
-                style={{ height: "75vh" }}
+                style={{ height: "76vh" }}
               />
             </>
           )}

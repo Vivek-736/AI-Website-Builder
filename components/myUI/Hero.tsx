@@ -5,7 +5,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { InputContext } from "@/context/InputContext";
 import { UserDetailContext } from "@/context/UserDetailContext";
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Typed from "typed.js";
 import AuthDialog from "./AuthDialog";
 import { useMutation, useQuery } from "convex/react";
@@ -38,7 +44,10 @@ const Hero = () => {
   const { input, setInput } = useContext(InputContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
 
-  const workspaces = useQuery(api.workspace.GetAllWorkspaces, userDetail?._id ? { userId: userDetail._id } : "skip");
+  const workspaces = useQuery(
+    api.workspace.GetAllWorkspaces,
+    userDetail?._id ? { userId: userDetail._id } : "skip"
+  );
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -141,7 +150,7 @@ const Hero = () => {
         </div>
       )}
       <div className="max-w-4xl mx-auto">
-        <h1 className="mb-6 text-3xl font-extrabold text-white md:text-5xl lg:text-7xl mt-28 md:mt-16">
+        <h1 className="mb-6 text-3xl font-extrabold text-white md:text-5xl lg:text-7xl md:mt-16">
           Build something <span className="text-pink-400">💖 Cherishable</span>
         </h1>
 
@@ -171,7 +180,9 @@ const Hero = () => {
               onClick={() => onGenerate(inputValue)}
               className="px-6 py-5 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-r-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               disabled={!inputValue.trim() || isLoading}
-              style={{ transition: "opacity 0.3s ease, background-color 0.3s ease" }}
+              style={{
+                transition: "opacity 0.3s ease, background-color 0.3s ease",
+              }}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -228,7 +239,9 @@ const Hero = () => {
 
       {workspaces && workspaces.length > 0 && (
         <div className="max-w-6xl mx-auto mt-16 px-4">
-          <h2 className="md:text-4xl text2xl font-bold text-pink-400 mb-12">Your Workspaces</h2>
+          <h2 className="md:text-4xl text2xl font-bold text-pink-400 mb-12">
+            Your Workspaces
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {workspaces.map((workspace, index) => (
               <div
@@ -248,12 +261,15 @@ const Hero = () => {
                     {workspace?.messages[0]?.content || "Untitled Workspace"}
                   </h3>
                   <p className="text-sm text-gray-400 mt-1">
-                    {new Date(workspace._creationTime).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {new Date(workspace._creationTime).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </p>
                 </div>
                 <div className="absolute inset-0 bg-pink-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
@@ -263,7 +279,7 @@ const Hero = () => {
         </div>
       )}
 
-      <footer className="w-full mt-16 py-6 bg-gray-900 border-t border-gray-700">
+      <footer className="bottom-0 mt-20 w-full py-6 backdrop-blur-3xl bg-white/10 rounded-2xl">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-gray-300 text-sm md:text-base">
             Made with <span className="text-pink-400">💖</span> by Vivek
